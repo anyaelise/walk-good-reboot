@@ -11,6 +11,13 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+/* set CORS
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});*/
+
 var port = process.env.PORT || 8080;        // set our port
 
 // ROUTES FOR OUR API
@@ -19,8 +26,14 @@ var router = express.Router();              // get an instance of the express Ro
 
 // middleware to use for all requests
 router.use(function(req, res, next) {
+    // set CORS
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+
     // do logging
-    console.log('Something is happening.');
+    console.log('Request received. Details follow:');
+    console.log(req.method);
+    console.log(req.body);
     next(); // make sure we go to the next routes and don't stop here
 });
 
@@ -48,8 +61,11 @@ router.route('/incidents')
 
         // save the incident and check for errors
         incident.save(function(err) {
-            if (err)
+            if (err) {
+		console.log("error!");
+		console.log(err);
                 res.send(err);
+	    }
 
             res.json({ message: 'Incident created!' });
         });
@@ -122,6 +138,7 @@ app.listen(port);
 console.log('Magic happens on port ' + port);
 
 var mongoose   = require('mongoose');
+mongoose.Promise = require('q').Promise;
 mongoose.connect('mongodb://localhost/db');
 
 var Incident     = require('./models/incident');
