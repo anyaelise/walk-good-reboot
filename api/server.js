@@ -33,6 +33,7 @@ router.use(function(req, res, next) {
     // do logging
     console.log('Request received. Details follow:');
     console.log(req.method);
+    console.log(req.headers);
     console.log(req.body);
     next(); // make sure we go to the next routes and don't stop here
 });
@@ -58,16 +59,19 @@ router.route('/incidents')
 	incident.date = req.body.incidentDate;
 	incident.time = req.body.incidentTime;
 	incident.description = req.body.incidentDesc;
+	incident.age = req.body.demoAge;
+	incident.gender = req.body.demoGender;
+	incident.identity = req.body.demoIdentity;
 
         // save the incident and check for errors
         incident.save(function(err) {
             if (err) {
 		console.log("error!");
 		console.log(err);
-                res.send(err);
+                res.send("-1");
 	    }
 
-            res.json({ message: 'Incident created!' });
+            res.json({ id: incident.id });
         });
     })
 
