@@ -5,20 +5,36 @@
 var express    = require('express');        // call express
 var app        = express();                 // define our app using express
 var bodyParser = require('body-parser');
+var FileStreamRotator = require('file-stream-rotator');
+var fs = require('fs');
+var morgan = require('morgan');
+var path = require('path');
+
+var port = process.env.PORT || 8080;        // set our port
 
 // configure app to use bodyParser()
 // this will let us get the data from a POST
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-/* set CORS
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});*/
+// LOGGING
+// =============================================================================
+var logDirectory = path.join(__dirname, 'log')
 
-var port = process.env.PORT || 8080;        // set our port
+// ensure log directory exists
+fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
+
+// create a rotating write stream
+var accessLogStream = FileStreamRotator.getStream({
+  date_format: 'YYYYMMDD',
+  filename: path.join(logDirectory, 'access-%DATE%.log'),
+  frequency: 'daily',
+  verbose: false
+})
+
+// setup the logger
+app.use(morgan('combined', {stream: accessLogStream}))
+
 
 // ROUTES FOR OUR API
 // =============================================================================
@@ -30,11 +46,12 @@ router.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
 
-    // do logging
+    /* old logging
     console.log('Request received. Details follow:');
     console.log(req.method);
     console.log(req.headers);
-    console.log(req.body);
+    console.log(req.body); */
+
     next(); // make sure we go to the next routes and don't stop here
 });
 
